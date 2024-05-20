@@ -40,8 +40,8 @@ def upload_file():
     file_data = []
     for file in file_objs:
         filename = secure_filename(file.filename)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")
-        unique_filename = f"{timestamp}_{filename}"
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
+        unique_filename = f"{timestamp}.{filename}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
         file_data.append({'file_path': file_path, "unique_filename": unique_filename})
