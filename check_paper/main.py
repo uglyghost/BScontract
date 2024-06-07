@@ -1,6 +1,6 @@
 from flask import Flask, request, send_from_directory, jsonify
 import os
-
+import re
 from pymilvus import Collection
 from werkzeug.utils import secure_filename
 import datetime
@@ -39,12 +39,16 @@ def upload_file():
 
     file_data = []
     for file in file_objs:
-        filename = secure_filename(file.filename)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
-        unique_filename = f"{timestamp}.{filename}"
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+
+        filename = file.filename
+        print("filename:",filename)
+        # 正则表达式匹配文件名
+
+        # timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
+        # unique_filename = f"{timestamp}.{filename}"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(file_path)
-        file_data.append({'file_path': file_path, "unique_filename": unique_filename})
+        file_data.append({'file_path': file_path, "unique_filename": filename})
 
     executor.submit(process_file, file_data)
 
