@@ -6,7 +6,7 @@ from tqdm import tqdm
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 from openai import OpenAI
 import os
-from sentence_transformers import SentenceTransformer
+
 # 使用新的 Hugging Face 模型
 # new_model = SentenceTransformer('sentence-transformer/paraphrase-MiniLM-L6-v2')
 # 全局配置
@@ -182,9 +182,9 @@ def search_vector(data_match):
         consistency_level="Strong"
     )
 
-    collection.release()
+    # collection.release()
     response_all = []
-    if results and results[0]:
+    if results[0]:
         for result in results[0]:
             dic = {"original_text": result.entity.get('original_text'), "modified_text": result.entity.get('modified_text')}
             response_all.append(dic)
