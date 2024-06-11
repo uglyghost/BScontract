@@ -14,12 +14,14 @@ executor = ThreadPoolExecutor(max_workers=1)
 app = Flask(__name__)
 
 # 设置用于存储上传和处理后的文件的目录
-UPLOAD_FOLDER = 'uploads/'
-PROCESSED_FOLDER = 'processed/'
+UPLOAD_FOLDER = 'outputs/uploads/'
+PROCESSED_FOLDER = 'outputs/processed/'
 
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
+
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['docx']
 
@@ -54,6 +56,7 @@ def upload_file():
 @app.route('/static/<filename>')
 def static_files(filename):
     return send_from_directory('processed', filename)
+
 
 if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):

@@ -9,11 +9,13 @@ api_key = "sk-IwmKcBKY42zk7gqsE3B502F9699d476b808e573fE4A74206"
 os.environ["OPENAI_API_KEY"] = api_key
 os.environ["OPENAI_API_BASE"] = "https://api.rcouyi.com/v1"
 
-def read_file( path):
+
+def read_file(path):
     # 读取文件内容
     with open(path, 'r', encoding='utf-8') as file:
         content = file.read()
     return content
+
 
 def get_correction_suggestion(content):
 
@@ -21,7 +23,22 @@ def get_correction_suggestion(content):
 
     examples = milvus_test.search_vector(content)
 
-    prompt = read_file("prompt_section.txt").format(examples=examples, content=content)
+    prompt = read_file("prompt_section.txt").format(examples=examples, content=content, full_text='')
+    response = chat.invoke(prompt)
+    print(response.content)
+    return response.content
+
+
+def get_correction_suggestion_new(api_url, content, full_text):
+
+    chat = ChatOpenAI(model="qwen-plus",
+                      openai_api_base=api_url)
+
+    examples = milvus_test.search_vector(content)
+
+    # prompt = read_file("prompt_section.txt").format(examples=examples, content=content, full_text=full_text)
+    prompt = read_file("prompt_section.txt").format(content=content)
+    print(prompt)
     response = chat.invoke(prompt)
     print(response.content)
     return response.content
@@ -30,12 +47,13 @@ def get_correction_suggestion(content):
 def all_check(doc):
 
     chat = ChatOpenAI(model="qwen-plus")
-    prompt=read_file("prompt_all.txt").format(contract=doc)
+    prompt = read_file("prompt_all.txt").format(contract=doc)
     response = chat.invoke(prompt).content
     print(response)
 
+
 if __name__ == '__main__':
-    content="""
+    content = """
    订单购销合同
 
 合同编号：

@@ -1,7 +1,6 @@
 from spire.doc import *
 
 
-
 def revise_document(revise_filepath, processed_filepath, contract_comments):
     doc = Document()
     doc.LoadFromFile(processed_filepath)

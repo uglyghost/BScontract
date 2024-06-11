@@ -7,7 +7,7 @@ import os
 import re
 import threading
 from annotate import add_comments
-from llm import get_correction_suggestion
+from llm import get_correction_suggestion, get_correction_suggestion_new
 
 url_base_list = [
     "https://api.rcouyi.com/v1/",
@@ -32,8 +32,8 @@ def check_contract(file_path, unique_filename):
         contract_comments, doc = check_text(doc)
         processed_filename = f"processed_{unique_filename}"
         revise_filename = f"processed_revise_{unique_filename}"
-        processed_filepath = os.path.join('processed/', processed_filename)
-        revise_filepath = os.path.join('processed/', revise_filename)
+        processed_filepath = os.path.join('outputs/processed/', processed_filename)
+        revise_filepath = os.path.join('outputs/processed/', revise_filename)
         doc.save(processed_filepath)
         add_comments(contract_comments, processed_filepath)
         print(contract_comments)
@@ -71,6 +71,37 @@ def process_paragraph(para, index):
     return None, index, None
 
 
+def is_heading(para):
+    # 判断段落是否为标题，通过检测是否以“一、”、“二、”等开头
+    heading_patterns = [r'^[一二三四五六七八九十]+、']
+    for pattern in heading_patterns:
+        if re.match(pattern, para.text.strip()):
+            return True
+    return False
+
+
+def process_paragraph_new(para, index, full_text):
+    # 检查段落是否为标题
+    if is_heading(para):
+        return None, index, None
+
+    api_url = url_base_list[index % 4]
+    # text = para.strip()  # 已经预处理为纯文本，所以不需要再次从对象中提取文本
+    text = para.text  # 已经预处理为纯文本，所以不需要再次从对象中提取文本
+    # 删除两端空格，并将多个连续空格替换为一个空格
+    text = re.sub(r'\s+', ' ', text)
+    if len(text) > 20:
+        print(text)
+        try:
+            advice = get_correction_suggestion_new(api_url, text, full_text)  # 增加超时机制并传递全文内容
+            print(advice)
+            return para, index, advice
+        except Exception as e:
+            print(f"获取建议时发生异常：{e}")
+            return None, index, None
+    return None, index, None
+
+
 def check_text(doc):
     total_paragraphs = len(doc.paragraphs)
     paragraphs_to_process = [{'para': para, 'index': i} for i, para in enumerate(doc.paragraphs) if para.text.strip()]
@@ -83,8 +114,12 @@ def check_text(doc):
     # 使用锁来同步多线程中的进度条更新
     progress_lock = threading.Lock()
 
+    full_text = ' '.join(item['para'].text for item in paragraphs_to_process if isinstance(item['para'], str))
+
     with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [executor.submit(process_paragraph, item['para'], item['index']) for item in paragraphs_to_process]
+        futures = [executor.submit(process_paragraph_new, item['para'], item['index'], full_text) for item in
+                   paragraphs_to_process]
+        # futures = [executor.submit(process_paragraph, item['para'], item['index']) for item in paragraphs_to_process]
 
         # 迭代等待每个任务完成
         for future in as_completed(futures):
